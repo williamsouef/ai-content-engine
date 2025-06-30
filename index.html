@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>IA Content Engine™</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet" />
+<style>
+:root {
+ --bg:#0e0e10;
+ --pane:#141416;
+ --border:#242528;
+ --text:#f5f5f7;
+ --text-dim:#898a96;
+ --glow:rgba(178,200,191,0.12);
+ --accent:#00d4aa;
+ --accent-dim:rgba(0,212,170,0.1);
+ --silver:#c0c0c0;
+ --silver-dim:rgba(192,192,192,0.1);
+ --silver-premium:#e5e7eb;
+ --silver-premium-dim:rgba(229,231,235,0.1);
+ --purple:#6b46c1;
+ --purple-dim:rgba(107,70,193,0.1);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Inter,system-ui,sans-serif;background:var(--bg);color:var(--text);overflow:hidden}
+.frame{position:fixed;inset:2rem;background:var(--pane);border:1px solid var(--border);border-radius:24px;overflow:hidden;display:flex;flex-direction:column}
+canvas{position:absolute;inset:0;z-index:0}
+.glow{position:absolute;width:120%;height:120%;top:-10%;left:-10%;background:radial-gradient(600px 400px at 70% 30%,var(--glow)0%,transparent 70%);filter:blur(60px)}
+.content{position:relative;z-index:2;flex:1;overflow-y:auto;scroll-behavior:smooth}
+.content::-webkit-scrollbar{width:8px}
+.content::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+header{position:sticky;top:0;backdrop-filter:blur(12px);background:rgba(20,20,22,.6);border-bottom:1px solid var(--border);z-index:10}
+nav{max-width:1400px;margin:0 auto;padding:1rem 2rem;display:flex;justify-content:space-between;align-items:center}
+.logo{font-weight:700;font-size:1.3rem}
+.nav-links{display:flex;gap:1.5rem;list-style:none}
+.nav-links a{color:var(--text-dim);text-decoration:none;font-weight:500;font-size:.9rem;transition:color .3s}
+.nav-links a:hover{color:var(--text)}
+.header-cta{background:#fff;color:#000;padding:.55rem 1.4rem;border-radius:28px;font-weight:600;text-decoration:none;font-size:.9rem}
+.section{padding:8rem 2rem;border-top:1px solid var(--border);max-width:1200px;margin:0 auto}
+.section:first-of-type{border-top:none}
+.section h2{font-size:2.4rem;font-weight:700;letter-spacing:-0.02em;margin-bottom:1.5rem;text-align:center}
+.section p.lead{font-size:1.15rem;color:var(--text-dim);text-align:center;margin-bottom:3rem;max-width:700px;margin-left:auto;margin-right:auto;line-height:1.6}
+.btn{
+  padding:1rem 2rem;
+  border-radius:32px;
+  font-weight:600;
+  font-size:1rem;
+  cursor:pointer;
+  border:none;
+  transition:all .3s ease;
+  backdrop-filter:blur(6px);
+  text-decoration:none;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:200px;
+  text-align:center;
+}
+.btn-main{
+  background:#fff;
+  color:#000;
+  box-shadow:0 4px 20px rgba(255,255,255,0.1);
+}
+.btn-main:hover{
+  transform:translateY(-3px);
+  box-shadow:0 8px 30px rgba(255,255,255,0.2);
+}
+.btn-secondary{
+  background:rgba(255,255,255,.08);
+  color:#fff;
+  border:1px solid var(--border);
+}
+.btn-secondary:hover{
+  transform:translateY(-3px);
+  background:rgba(255,255,255,.12);
+  border-color:var(--text-dim);
+}
+
+/* 3D CARDS & ANIMATIONS */
+.card-3d{
+  background:linear-gradient(135deg,rgba(255,255,255,.08),rgba(255,255,255,.02));
+  border:1px solid var(--border);
+  border-radius:20px;
+  padding:2.5rem;
+  position:relative;
+  transform-style:preserve-3d;
+  transition:all .4s ease;
+  backdrop-filter:blur(10px);
+}
+.card-3d:hover{
+  transform:translateY(-8px) rotateX(2deg);
+  box-shadow:0 20px 40px rgba(0,0,0,0.1);
+}
+.card-3d::before{
+  content:'';
+  position:absolute;
+  inset:0;
+  background:linear-gradient(135deg,var(--accent-dim),transparent);
+  border-radius:16px;
+  opacity:0;
+  transition:opacity .4s ease;
+}
+.card-3d:hover::before{opacity:1}
+
+.floating{
+  animation:float 6s ease-in-out infinite;
+}
+@keyframes float{
+  0%,100%{transform:translateY(0)}
+  50%{transform:translateY(-20px)}
+}
+
+.benefit-grid{
+  display:grid;
+  gap:2.5rem;
+  margin:4rem 0;
+  max-width:1000px;
+  margin-left:auto;
+  margin-right:auto;
+}
+@media(min-width:768px){
+  .benefit-grid{grid-template-columns:repeat(3,1fr)}
+}
+
+.benefit-card{
+  text-align:center;
+  position:relative;
+}
+.benefit-icon{
+  width:60px;
+  height:60px;
+  background:var(--accent);
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  margin:0 auto 1rem;
+  font-size:1.5rem;
+  animation:pulse 2s infinite;
+}
+@keyframes pulse{
+  0%,100%{box-shadow:0 0 0 0 var(--accent-dim)}
+  50%{box-shadow:0 0 0 20px transparent}
+}
+
+.transform-section{
+  display:grid;
+  gap:3rem;
+  margin:4rem auto;
+  max-width:900px;
+  align-items:center;
+}
+@media(min-width:768px){
+  .transform-section{grid-template-columns:1fr auto 1fr}
+}
+
+.before-after{
+  position:relative;
+  padding:2rem;
+  border-radius:16px;
+}
+.before{
+  background:linear-gradient(135deg,rgba(255,0,0,.1),rgba(255,0,0,.05));
+  border:1px solid rgba(255,0,0,.2);
+}
+.after{
+  background:linear-gradient(135deg,var(--accent-dim),rgba(0,212,170,.05));
+  border:1px solid var(--accent);
+}
+
+.arrow{
+  font-size:2rem;
+  color:var(--accent);
+  transform:rotate(0deg);
+}
+@media(max-width:767px){
+  .arrow{transform:rotate(90deg)}
+}
+
+/* HERO ENHANCEMENTS */
+.hero{
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  text-align:center;
+  min-height:85vh;
+  position:relative;
+  padding:4rem 2rem;
+}
+.hero h1{font-size:clamp(2.8rem,6vw,4.5rem);font-weight:800;line-height:1.1;margin-bottom:1.2rem;background:linear-gradient(90deg,rgba(255,255,255,.95),rgba(255,255,255,.45)60%,rgba(255,255,255,.2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.hero p{font-size:1.15rem;color:var(--text-dim);max-width:600px;margin-bottom:2.2rem}
+.ctas{
+  display:flex;
+  gap:1.5rem;
+  justify-content:center;
+  margin-bottom:2rem;
+  flex-wrap:wrap;
+}
+@media(max-width:600px){
+  .ctas{flex-direction:column;align-items:center}
+}
+.tagline{font-size:.85rem;color:#fff;background:rgba(255,255,255,.1);padding:.4rem 1rem;border-radius:20px;margin-bottom:1.5rem;border:1px solid var(--border)}
+
+.hero-benefits{
+  position:absolute;
+  top:50%;
+  left:0;
+  right:0;
+  pointer-events:none;
+  z-index:-1;
+}
+.floating-benefit{
+  position:absolute;
+  background:rgba(255,255,255,.05);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:1rem;
+  font-size:.8rem;
+  backdrop-filter:blur(8px);
+  animation:float 8s ease-in-out infinite;
+}
+.floating-benefit:nth-child(1){top:-100px;left:10%;animation-delay:0s}
+.floating-benefit:nth-child(2){top:-50px;right:15%;animation-delay:2s}
+.floating-benefit:nth-child(3){bottom:-80px;left:20%;animation-delay:4s}
+.floating-benefit:nth-child(4){bottom:-120px;right:10%;animation-delay:6s}
+
+/* GRID LISTS */
+.list{line-height:1.6;margin:1rem 0 1.5rem 1rem;color:var(--text-dim)}
+.list li{margin-bottom:.3rem}
+.pricing-grid{
+  display:grid;
+  gap:2.5rem;
+  margin-top:4rem;
+  max-width:1200px;
+  margin-left:auto;
+  margin-right:auto;
+}
+@media(min-width:900px){
+  .pricing-grid{grid-template-columns:repeat(3,1fr)}
+}
+.pricing-card{
+  position:relative;
+  height:100%;
+  display:flex;
+  flex-direction:column;
+  background:var(--pane);
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:2rem;
+  transition:transform .3s;
+}
+.pricing-card:hover{transform:translateY(-6px)}
+.pricing-card h3{font-size:1.2rem;font-weight:700;margin-bottom:.8rem}
+.pricing-card .price{
+  font-size:2.5rem;
+  font-weight:700;
+  margin:1.5rem 0;
+  line-height:1;
+}
+.pricing-card .old{font-size:1rem;text-decoration:line-through;color:var(--text-dim);margin-right:.4rem}
+.pricing-card .list{
+  flex-grow:1;
+  margin:1.5rem 0 2rem 0;
+}
+.pricing-card .btn{
+  margin-top:auto;
+  width:100%;
+}
+
+/* FINAL CTA */
+.final-cta{
+  text-align:center;
+  padding:6rem 2rem;
+  background:rgba(255,255,255,0.02);
+  border-radius:24px;
+  margin:4rem auto;
+  max-width:800px;
+}
+.final-cta .btn-main{
+  font-size:1.1rem;
+  padding:1.2rem 2.5rem;
+  margin-top:2rem;
+}
+/* modal styles */
+.modal{position:fixed;inset:0;display:none;justify-content:center;align-items:center;z-index:50}
+.modal[aria-hidden="false"]{display:flex}
+.modal-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(4px)}
+.modal-panel{position:relative;background:var(--pane);border:1px solid var(--border);padding:2rem 2.5rem;border-radius:18px;max-width:420px;width:90%;z-index:2}
+.modal-close{position:absolute;top:.6rem;right:.6rem;background:none;border:none;color:var(--text-dim);font-size:1.2rem;cursor:pointer}
+#audit-form label{display:block;font-size:.9rem;margin:.8rem 0;color:var(--text-dim)}
+#audit-form input,#audit-form textarea{width:100%;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:8px;padding:.6rem .8rem;color:var(--text);font-family:inherit;font-size:.9rem}
+#audit-form input:focus,#audit-form textarea:focus{outline:none;border-color:var(--text-dim)}
+.form-status{margin-top:.8rem;font-size:.85rem;color:var(--text-dim);text-align:center}
+</style>
+</head>
+<body>
+<div class="frame">
+  <div class="glow"></div>
+  <canvas id="stars"></canvas>
+  <div class="content">
+    <header>
+      <nav>
+        <div class="logo">IA Content Engine™</div>
+        <ul class="nav-links">
+          <li><a href="#how">How It Works</a></li>
+          <li><a href="#pricing">Pricing</a></li>
+        </ul>
+        <a href="https://calendly.com/prodwilliamsouef/30min" class="header-cta" target="_blank">Book Audit</a>
+      </nav>
+    </header>
+
+    <!-- HERO -->
+    <section class="hero" id="top">
+      <div class="hero-benefits">
+        <div class="floating-benefit">🚀 30 Days to Launch</div>
+        <div class="floating-benefit">💰 Qualified Leads Weekly</div>
+        <div class="floating-benefit">⚡ 1-Click Approvals</div>
+        <div class="floating-benefit">🎯 AI-Powered Content</div>
+      </div>
+      <span class="tagline">Live in 30 days – or I finish it for free.</span>
+      <h1>IA Content Engine™</h1>
+      <p>From "I'm everywhere" to "it sells while I sleep." The AI-powered system that automates your content, saves your brain—and drives qualified leads while you live.</p>
+      <div class="ctas">
+        <a href="https://calendly.com/prodwilliamsouef/30min" class="btn btn-main" target="_blank">Book My Free Audit</a>
+        <a href="#pain" class="btn btn-secondary">See How It Works ↓</a>
+      </div>
+    </section>
+
+    <!-- PAIN POINTS -->
+    <section class="section" id="pain">
+      <div style="text-align:center;max-width:800px;margin:0 auto">
+        <h2 style="color:#ff6b6b;margin-bottom:2rem">You're doing what they said...</h2>
+        
+        <div style="display:grid;gap:1.5rem;margin:2rem 0">
+          <div class="card-3d" style="padding:1.5rem;background:rgba(255,107,107,0.05);border-color:rgba(255,107,107,0.2)">
+            <p style="font-size:1.3rem;font-weight:600;margin-bottom:0.5rem">"Post more."</p>
+          </div>
+          <div class="card-3d" style="padding:1.5rem;background:rgba(255,107,107,0.05);border-color:rgba(255,107,107,0.2);animation-delay:0.2s">
+            <p style="font-size:1.3rem;font-weight:600;margin-bottom:0.5rem">"Be consistent."</p>
+          </div>
+          <div class="card-3d" style="padding:1.5rem;background:rgba(255,107,107,0.05);border-color:rgba(255,107,107,0.2);animation-delay:0.4s">
+            <p style="font-size:1.3rem;font-weight:600;margin-bottom:0.5rem">"Share value."</p>
+          </div>
+        </div>
+
+        <p style="font-size:1.4rem;font-weight:700;margin:2rem 0;color:var(--text)">You did.</p>
+        <p style="font-size:1.2rem;margin-bottom:2rem;color:var(--text-dim)">And yet...</p>
+
+        <div class="card-3d" style="padding:2.5rem;background:rgba(255,107,107,0.03);border-color:rgba(255,107,107,0.15);text-align:left">
+          <ul style="list-style:none;padding:0;margin:0;line-height:1.8">
+            <li style="margin-bottom:1rem;display:flex;align-items:center;gap:1rem">
+              <span style="color:#ff6b6b;font-size:1.2rem"></span>
+              <span>You spend hours writing, designing, editing and nothing moves.</span>
+            </li>
+            <li style="margin-bottom:1rem;display:flex;align-items:center;gap:1rem">
+              <span style="color:#ff6b6b;font-size:1.2rem"></span>
+              <span>You're second-guessing every hook, every CTA, every idea.</span>
+            </li>
+            <li style="margin-bottom:1rem;display:flex;align-items:center;gap:1rem">
+              <span style="color:#ff6b6b;font-size:1.2rem"></span>
+              <span>You feel like your content is smart—but invisible.</span>
+            </li>
+            <li style="margin-bottom:1rem;display:flex;align-items:center;gap:1rem">
+              <span style="color:#ff6b6b;font-size:1.2rem"></span>
+              <span>Your DMs? Quiet.</span>
+            </li>
+            <li style="margin-bottom:1rem;display:flex;align-items:center;gap:1rem">
+              <span style="color:#ff6b6b;font-size:1.2rem"></span>
+              <span>Your numbers? Flat.</span>
+            </li>
+            <li style="display:flex;align-items:center;gap:1rem">
+              <span style="color:#ff6b6b;font-size:1.2rem"></span>
+              <span>Your energy? Gone.</span>
+            </li>
+          </ul>
+        </div>
+
+        <div style="margin-top:2rem;padding:1.5rem;background:rgba(255,107,107,0.08);border-radius:12px;border:1px solid rgba(255,107,107,0.2)">
+          <p style="font-size:1.1rem;font-weight:600;color:#ff6b6b">The truth is: You're not lazy. You're not broken.</p>
+          <p style="font-size:1.1rem;margin-top:0.5rem">You're just doing it without a system.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- TRANSFORMATION -->
+    <section class="section" id="transformation">
+      <h2>The Transformation</h2>
+      <p class="lead">Stop grinding. Start growing. Here's what changes:</p>
+      
+      <div class="transform-section">
+        <div class="before-after before card-3d">
+          <h3 style="color:#ff6b6b;margin-bottom:1rem">😩 Before</h3>
+          <ul class="list" style="margin-left:0">
+            <li>Hours writing, editing, designing</li>
+            <li>Guessing what content works</li>
+            <li>Invisible posts, quiet DMs</li>
+            <li>Energy drained, numbers flat</li>
+            <li>CEO + CMO + copywriter daily</li>
+          </ul>
+        </div>
+        
+        <div class="arrow">→</div>
+        
+        <div class="before-after after card-3d">
+          <h3 style="color:var(--accent);margin-bottom:1rem">✨ After</h3>
+          <ul class="list" style="margin-left:0">
+            <li>Self-feeding content calendar</li>
+            <li>1-click approvals via Slack</li>
+            <li>Qualified leads every week</li>
+            <li>Content drives revenue</li>
+            <li>System runs while you live</li>
+          </ul>
+        </div>
+      </div>
+      
+      <div style="text-align:center;margin-top:3rem">
+        <a href="https://calendly.com/prodwilliamsouef/30min" class="btn btn-main" target="_blank">Get This Transformation</a>
+      </div>
+    </section>
+
+    <!-- KEY BENEFITS -->
+    <section class="section" id="benefits">
+      <h2>What You Actually Get</h2>
+      <p class="lead">Not just content. A revenue-generating machine.</p>
+      
+      <div class="benefit-grid">
+        <div class="benefit-card card-3d floating">
+          <div class="benefit-icon">🎯</div>
+          <h3>Qualified Leads</h3>
+          <p>Stop chasing followers. Start attracting buyers. Your content becomes a lead magnet that works 24/7.</p>
+        </div>
+        
+        <div class="benefit-card card-3d floating" style="animation-delay:1s">
+          <div class="benefit-icon">⚡</div>
+          <h3>1-Click Approvals</h3>
+          <p>Review and approve posts instantly via Slack. No more logging into multiple platforms or endless revisions.</p>
+        </div>
+        
+        <div class="benefit-card card-3d floating" style="animation-delay:2s">
+          <div class="benefit-icon">🚀</div>
+          <h3>30-Day Launch</h3>
+          <p>Your complete system goes live in 30 days. If not, I finish it for free. No excuses, no delays.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- HOW IT WORKS -->
+    <section class="section" id="how">
+      <h2>How It Works</h2>
+      <p class="lead">Your content engine, built in 5 simple steps:</p>
+      
+      <div class="benefit-grid" style="grid-template-columns:1fr;gap:2rem;max-width:800px;margin:0 auto">
+        <div class="benefit-card card-3d" style="text-align:left;padding:2.5rem">
+          <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem">
+            <div class="benefit-icon" style="margin:0;width:50px;height:50px;font-size:1.2rem">1</div>
+            <h3 style="margin:0">Strategy Session (90 minutes)</h3>
+          </div>
+          <p style="color:var(--text-dim);margin-bottom:1rem"><strong>What happens:</strong> We hop on a call and map out your entire content strategy together.</p>
+          <p style="color:var(--text)"><strong>What you get:</strong> A clear blueprint of what content to create, who to target, and how your engine will generate leads for your specific business.</p>
+        </div>
+
+        <div class="benefit-card card-3d" style="text-align:left;padding:2.5rem;animation-delay:0.5s">
+          <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem">
+            <div class="benefit-icon" style="margin:0;width:50px;height:50px;font-size:1.2rem">2</div>
+            <h3 style="margin:0">I Build Your Engine</h3>
+          </div>
+          <p style="color:var(--text-dim);margin-bottom:1rem"><strong>What happens:</strong> I connect all the tech pieces behind the scenes (you don't touch any of it).</p>
+          <p style="color:var(--text)"><strong>What you get:</strong> Your content automatically flows from idea → creation → approval → posting. All connected, all automated.</p>
+        </div>
+
+        <div class="benefit-card card-3d" style="text-align:left;padding:2.5rem;animation-delay:1s">
+          <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem">
+            <div class="benefit-icon" style="margin:0;width:50px;height:50px;font-size:1.2rem">3</div>
+            <h3 style="margin:0">30 Ready-to-Post Content Pieces</h3>
+          </div>
+          <p style="color:var(--text-dim);margin-bottom:1rem"><strong>What happens:</strong> I create your first month of content using AI, in your voice, for your audience.</p>
+          <p style="color:var(--text)"><strong>What you get:</strong> Professional posts with eye-catching visuals, ready to go live. No more staring at blank screens.</p>
+        </div>
+
+        <div class="benefit-card card-3d" style="text-align:left;padding:2.5rem;animation-delay:1.5s">
+          <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem">
+            <div class="benefit-icon" style="margin:0;width:50px;height:50px;font-size:1.2rem">4</div>
+            <h3 style="margin:0">Simple Instructions for Your Team</h3>
+          </div>
+          <p style="color:var(--text-dim);margin-bottom:1rem"><strong>What happens:</strong> I create step-by-step videos showing exactly how to run your engine.</p>
+          <p style="color:var(--text)"><strong>What you get:</strong> Your assistant (or you) can manage everything in 30 minutes per week. No guesswork, no confusion.</p>
+        </div>
+
+        <div class="benefit-card card-3d" style="text-align:left;padding:2.5rem;animation-delay:2s">
+          <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem">
+            <div class="benefit-icon" style="margin:0;width:50px;height:50px;font-size:1.2rem">5</div>
+            <h3 style="margin:0">Two Weeks of Hand-Holding</h3>
+          </div>
+          <p style="color:var(--text-dim);margin-bottom:1rem"><strong>What happens:</strong> Direct access to me via Slack for any questions or tweaks.</p>
+          <p style="color:var(--text)"><strong>What you get:</strong> Peace of mind. If anything breaks or needs adjusting, I'm right there to fix it instantly.</p>
+        </div>
+      </div>
+
+      <div style="text-align:center;margin-top:3rem;padding:2rem;background:rgba(0,212,170,0.05);border:1px solid var(--accent);border-radius:16px">
+        <h3 style="color:var(--accent);margin-bottom:1rem">The Result</h3>
+        <p style="font-size:1.1rem">You go from spending hours creating content to approving it in seconds. Your engine works while you focus on what you do best.</p>
+      </div>
+    </section>
+
+    <!-- PRICING -->
+    <section class="section" id="pricing">
+      <h2>Choose Your Setup</h2>
+      <div class="pricing-grid">
+        <div class="pricing-card card-3d" style="border-color:var(--silver);background:linear-gradient(135deg,var(--silver-dim),rgba(192,192,192,0.02))">
+          <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:1rem">
+            <div style="width:12px;height:12px;background:var(--silver);border-radius:50%"></div>
+            <h3 style="margin:0;color:var(--silver)">DIY Template</h3>
+          </div>
+          <div class="price" style="color:var(--silver)">€197</div>
+          <p>You're hands-on and want to build it yourself.<br>Perfect for creators who love learning new systems.</p>
+          <ul class="list">
+            <li>Complete step-by-step framework</li>
+            <li>Ready-made templates you can copy</li>
+            <li>Video walkthrough showing you exactly what to do</li>
+            <li>Bonus: 50 proven content ideas to get started</li>
+          </ul>
+          <a href="https://calendly.com/prodwilliamsouef/30min" class="btn btn-secondary" target="_blank" style="border-color:var(--silver);color:var(--silver)">Get the DIY Blueprint</a>
+        </div>
+        
+        <div class="pricing-card card-3d" style="border-color:var(--silver-premium);background:linear-gradient(135deg,var(--silver-premium-dim),rgba(229,231,235,0.02))">
+          <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:1rem">
+            <div style="width:12px;height:12px;background:var(--silver-premium);border-radius:50%"></div>
+            <h3 style="margin:0;color:var(--silver-premium)">Starter Setup</h3>
+          </div>
+          <div class="price" style="color:var(--silver-premium)">€790</div>
+          <p>(5 spots/month) — I build it, you run it.<br>Great if you want it done but prefer to stay in control.</p>
+          <ul class="list">
+            <li>90-minute strategy call (we plan it together)</li>
+            <li>I build your complete content system</li>
+            <li>10 ready-to-post content pieces to start</li>
+            <li>Simple video instructions for daily use</li>
+            <li>1 week of direct support while you learn</li>
+          </ul>
+          <a href="https://calendly.com/prodwilliamsouef/30min" class="btn btn-secondary" target="_blank" style="border-color:var(--silver-premium);color:var(--silver-premium)">Reserve My Spot</a>
+        </div>
+        
+        <div class="pricing-card card-3d" style="border-color:var(--accent);background:linear-gradient(135deg,var(--accent-dim),rgba(0,212,170,0.02));transform:scale(1.05);box-shadow:0 20px 40px rgba(0,212,170,0.15)">
+          <div style="position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:var(--accent);color:#000;padding:0.4rem 1rem;border-radius:20px;font-size:0.8rem;font-weight:700">MOST POPULAR</div>
+          <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:1rem">
+            <div style="width:12px;height:12px;background:var(--accent);border-radius:50%"></div>
+            <h3 style="margin:0;color:var(--accent)">Done-For-You Pro</h3>
+          </div>
+          <div class="price" style="color:var(--accent)"><span class="old">€1,490</span> €1,290</div>
+          <p>(First 3/month) — Complete peace of mind.<br>I handle everything, you just approve and watch it work.</p>
+          <ul class="list">
+            <li>Everything in Starter, plus:</li>
+            <li>30 custom content pieces (written in your voice)</li>
+            <li>Professional visuals + instant approval system</li>
+            <li>Fully automated posting (runs without you)</li>
+            <li>2 weeks of premium support during launch</li>
+          </ul>
+          <a href="https://calendly.com/prodwilliamsouef/30min" class="btn btn-main" target="_blank" style="background:var(--accent);color:#000;box-shadow:0 4px 20px rgba(0,212,170,0.3)">Apply for Done-For-You</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- SYSTEM BENEFIT -->
+    <section class="section" id="system">
+      <h2>This Isn't a Course. It's a System.</h2>
+      <p class="lead">No "content calendar." No "101 tips." No "just be consistent." This is an engine that writes. Schedules. Posts. Sells. <br>While you coach. Build. Live.</p>
+    </section>
+
+    <!-- FINAL CTA -->
+    <section class="section final-cta" id="cta">
+      <h2>Let's Build Yours</h2>
+      <p class="lead">You don't need more ideas — you need a machine that moves.</p>
+      <a href="https://calendly.com/prodwilliamsouef/30min" class="btn btn-main" target="_blank">Book Your Free 30-min Audit</a>
+      <p style="margin-top:1.2rem">→ We'll map the system together. <br>→ No pitch. Just clarity.</p>
+      <p style="margin-top:2rem;font-weight:500">Launch&nbsp;Guarantee: Your engine goes live in 30 days, or I finish it for free.</p>
+    </section>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+// Starfield animation
+const canvas = document.getElementById('stars');
+const ctx = canvas.getContext('2d');
+let width, height, stars = [];
+
+function resize() {
+  width = canvas.width = window.innerWidth - 64;
+  height = canvas.height = window.innerHeight - 64;
+  stars = [];
+  
+  for (let i = 0; i < width / 3; i++) {
+    stars.push({
+      x: Math.random() * width,
+      y: Math.random() * height,
+      alpha: Math.random()
+    });
+  }
+}
+
+function draw() {
+  ctx.clearRect(0, 0, width, height);
+  
+  stars.forEach(star => {
+    ctx.fillStyle = `rgba(255, 255, 255, ${star.alpha})`;
+    ctx.fillRect(star.x, star.y, 1, 1);
+    
+    star.alpha += Math.random() * 0.02 - 0.01;
+    star.alpha = Math.max(0.1, Math.min(0.8, star.alpha));
+  });
+  
+  requestAnimationFrame(draw);
+}
+
+resize();
+draw();
+window.addEventListener('resize', resize);
+</script>
+</body>
+</html> 
